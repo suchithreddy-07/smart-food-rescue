@@ -6,15 +6,23 @@ import com.smartfoodrescue.entity.FoodListing;
 import com.smartfoodrescue.entity.User;
 import com.smartfoodrescue.repository.FoodListingRepository;
 import com.smartfoodrescue.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDate;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Configuration
 public class DataInitializer {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
+    private static final Pattern BCRYPT_PATTERN =
+            Pattern.compile("^\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}$");
 
     @Bean
     CommandLineRunner seedInitialData(UserRepository userRepository,
@@ -24,7 +32,10 @@ public class DataInitializer {
                                       @Value("${ADMIN_PASSWORD:Admin@12345}") String adminPassword) {
         return args -> {
             // Seed Admin
-            if (userRepository.findByEmail(adminEmail.toLowerCase()).isEmpty()) {
+            Optional<User> existingAdmin = userRepository.findByEmail(adminEmail.toLowerCase());
+            if (existingAdmin.isPresent()) {
+                repairPasswordIfInvalid(existingAdmin.get(), adminPassword, userRepository, passwordEncoder);
+            } else {
                 User admin = new User();
                 admin.setName("Platform Admin");
                 admin.setEmail(adminEmail.toLowerCase());
@@ -38,7 +49,10 @@ public class DataInitializer {
             }
 
             // Seed Demo Provider
-            User provider = userRepository.findByEmail("provider@smartfoodrescue.local").orElseGet(() -> {
+            Optional<User> existingProvider = userRepository.findByEmail("provider@smartfoodrescue.local");
+            existingProvider.ifPresent(u ->
+                    repairPasswordIfInvalid(u, "Provider@12345", userRepository, passwordEncoder));
+            User provider = existingProvider.orElseGet(() -> {
                 User u = new User();
                 u.setName("Priya Sharma");
                 u.setEmail("provider@smartfoodrescue.local");
@@ -52,7 +66,10 @@ public class DataInitializer {
             });
 
             // Seed Demo Orphanage
-            userRepository.findByEmail("orphanage@smartfoodrescue.local").orElseGet(() -> {
+            Optional<User> existingOrphanage = userRepository.findByEmail("orphanage@smartfoodrescue.local");
+            existingOrphanage.ifPresent(u ->
+                    repairPasswordIfInvalid(u, "Orphanage@12345", userRepository, passwordEncoder));
+            existingOrphanage.orElseGet(() -> {
                 User u = new User();
                 u.setName("David Rao");
                 u.setEmail("orphanage@smartfoodrescue.local");
@@ -98,6 +115,18 @@ public class DataInitializer {
                         "Plot 42, Hitech City Main Road, Madhapur", "Hyderabad");
             }
         };
+    }
+
+    private void repairPasswordIfInvalid(User user, String demoPassword,
+                                         UserRepository userRepository,
+                                         PasswordEncoder passwordEncoder) {
+        String current = user.getPassword();
+        if (current != null && BCRYPT_PATTERN.matcher(current).matches()) {
+            return;
+        }
+        user.setPassword(passwordEncoder.encode(demoPassword));
+        userRepository.save(user);
+        log.warn("Re-encoded invalid password hash for demo account {}", user.getEmail());
     }
 
     private void createSampleListing(FoodListingRepository repo, User provider,
