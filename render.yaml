@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: smart-food-rescue-api
+    runtime: java
+    plan: free
+    rootDir: backend
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/smart-food-rescue-1.0.0.jar
+    healthCheckPath: /api/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8080
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@smartfoodrescue.local
+      - key: ADMIN_PASSWORD
+        sync: false

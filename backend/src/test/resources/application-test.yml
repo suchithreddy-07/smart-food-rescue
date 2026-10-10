@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sfr;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  sql:
+    init:
+      mode: never
+
+app:
+  jwt:
+    secret: TestOnlySecretKeyMustBeAtLeast32Chars!!
+    expiration-ms: 3600000
+  cors:
+    allowed-origins: http://localhost:5173
+  gemini:
+    api-key: ""
+    model: gemini-2.0-flash
