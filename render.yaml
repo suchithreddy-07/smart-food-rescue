@@ -1,7 +1,11 @@
 services:
   - type: web
     name: smart-food-rescue-api
-    runtime: java
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
     rootDir: backend
     buildCommand: ./mvnw clean package -DskipTests
