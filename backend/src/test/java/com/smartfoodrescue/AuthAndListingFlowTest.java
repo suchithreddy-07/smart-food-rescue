@@ -60,6 +60,15 @@ class AuthAndListingFlowTest {
     }
 
     @Test
+    void malformedJsonBodyReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{email: x}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Malformed request body"));
+    }
+
+    @Test
     void providerCanListAndOrphanageCanRequestThenProviderAccepts() throws Exception {
         String providerToken = register("Green Kitchen", "provider@test.com", "PROVIDER");
         String orphanageToken = register("Hope Home", "orphanage@test.com", "ORPHANAGE");
