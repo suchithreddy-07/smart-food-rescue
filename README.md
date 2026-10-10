@@ -151,13 +151,8 @@ Windows note: this repo does not include the Maven wrapper until you generate it
 
 1. Import `/frontend` as a Vercel project (Root Directory: `frontend`).
 2. Framework: Vite.
-3. Environment variable:
-
-```
-VITE_API_URL=https://YOUR-RENDER-SERVICE.onrender.com
-```
-
-4. Deploy, then copy the Vercel URL back into Render `CORS_ALLOWED_ORIGINS` (comma-separated if you have a preview URL too) and redeploy the API.
+3. Deploy. Production API requests use the `/api` rewrite in `frontend/vercel.json`; do not set `VITE_API_URL` in Vercel.
+4. For local development, set `VITE_API_URL` to the public backend URL and allow the local frontend origin in `CORS_ALLOWED_ORIGINS`.
 
 ### D. Verify live
 
